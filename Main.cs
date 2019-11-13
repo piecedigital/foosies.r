@@ -33,12 +33,12 @@ namespace foosies
 
         public unsafe Game()
         {
-            testText = ((GGPOData.GGPOErrorCode)csg.Test()).ToString();
+            int sessionRef;
+            GGPOErrorCode testSession = (GGPOErrorCode)csg.Test(&sessionRef);
+             testText = sessionRef.ToString();
+
             rl.InitWindow(640, 480, "Hello World");
 
-            // GGPOSession *ggpo = null;
-            // GGPOSessionCallbacks cb = new GGPOSessionCallbacks();
-            // cggpo.ggpo_start_session(out ggpo, &cb, Encoding.ASCII.GetBytes("test_game"), 2, sizeof(int), 8001);
 
             while (!rl.WindowShouldClose())
             {
