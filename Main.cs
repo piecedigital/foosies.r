@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using Raylib;
 using rl = Raylib.Raylib;
-using GGPO;
-using cggpo = GGPO.GGPO;
+using GGPOData;
+using CSGGPO;
 
+// callbacks to delegate
 // begin_game
 // save_game_state
 // load_game_state
@@ -28,18 +29,16 @@ namespace foosies
     class Game
     {
         string testText = "Hello, world!";
+        GGPO csg = new GGPO();
 
         public unsafe Game()
         {
+            testText = ((GGPOData.GGPOErrorCode)csg.Test()).ToString();
             rl.InitWindow(640, 480, "Hello World");
 
-            // @TODO: Eventually this will go where it's truly appropriate, however it's currently here to test for breaking functionality
-            // Currently this hella breaks
-            /*
-            GGPOSession *ggpo;
-            GGPOSessionCallbacks cb;
-            cggpo.ggpo_start_session(&ggpo, &cb, Encoding.ASCII.GetBytes("test_game"), 2, sizeof(int), 8001);
-            */
+            // GGPOSession *ggpo = null;
+            // GGPOSessionCallbacks cb = new GGPOSessionCallbacks();
+            // cggpo.ggpo_start_session(out ggpo, &cb, Encoding.ASCII.GetBytes("test_game"), 2, sizeof(int), 8001);
 
             while (!rl.WindowShouldClose())
             {

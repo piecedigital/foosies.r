@@ -9,7 +9,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GGPO
+namespace GGPOData
 {
     public enum GGPOErrorCode
     {
@@ -96,18 +96,18 @@ namespace GGPO
     public struct GGPOSession
     {
         // ~GGPOSession() { }
-        public unsafe delegate GGPOErrorCode DoPoll(int timeout);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode AddPlayer(GGPOPlayer* player, /*GGPOPlayerHandle*/int* handle);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode AddLocalInput(/*GGPOPlayerHandle*/int player, void* values, int size);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode SyncInput(void* values, int size, int* disconnect_flags);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode IncrementFrame();// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode Chat(byte[] text);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode DisconnectPlayer(/*GGPOPlayerHandle*/int handle);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode GetNetworkStats(GGPONetworkStats* stats, /*GGPOPlayerHandle*/int handle);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode Logv(byte[] fmt, params object[] objects);// { return GGPOErrorCode.GGPO_OK; }
-        public unsafe delegate GGPOErrorCode SetFrameDelay(/*GGPOPlayerHandle*/int player, int delay);// { return GGPOErrorCode.GGPO_ERRORCODE_UNSUPPORTED; }
-        public unsafe delegate GGPOErrorCode SetDisconnectTimeout(int timeout);// { return GGPOErrorCode.GGPO_ERRORCODE_UNSUPPORTED; }
-        public unsafe delegate GGPOErrorCode SetDisconnectNotifyStart(int timeout);// { return GGPOErrorCode.GGPO_ERRORCODE_UNSUPPORTED; }
+        public unsafe delegate GGPOErrorCode DoPoll(int timeout);
+        public unsafe delegate GGPOErrorCode AddPlayer(ref GGPOPlayer player, /*GGPOPlayerHandle*/ref int handle);
+        public unsafe delegate GGPOErrorCode AddLocalInput(/*GGPOPlayerHandle*/int player, void* values, int size);
+        public unsafe delegate GGPOErrorCode SyncInput(void* values, int size, ref int disconnect_flags);
+        public unsafe delegate GGPOErrorCode IncrementFrame();
+        public unsafe delegate GGPOErrorCode Chat(byte[] text);
+        public unsafe delegate GGPOErrorCode DisconnectPlayer(/*GGPOPlayerHandle*/int handle);
+        public unsafe delegate GGPOErrorCode GetNetworkStats(GGPONetworkStats* stats, /*GGPOPlayerHandle*/int handle);
+        public unsafe delegate GGPOErrorCode Logv(byte[] fmt, params object[] objects);
+        public unsafe delegate GGPOErrorCode SetFrameDelay(/*GGPOPlayerHandle*/int player, int delay);
+        public unsafe delegate GGPOErrorCode SetDisconnectTimeout(int timeout);
+        public unsafe delegate GGPOErrorCode SetDisconnectNotifyStart(int timeout);
     };
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -125,7 +125,7 @@ namespace GGPO
             * length into the *len parameter.  Optionally, the client can compute
             * a checksum of the data and store it in the *checksum argument.
             */
-        public unsafe bool save_game_state(byte** buffer, int* len, int* checksum, int frame) { return true; }
+        public unsafe bool save_game_state(byte** buffer, ref int len, ref int checksum, int frame) { return true; }
 
         /*
             * load_game_state - GGPO.net will call this function at the beginning
@@ -198,53 +198,5 @@ namespace GGPO
                 ushort port;
             }
         }
-    }
-
-    public partial class GGPO
-    {
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_start_session(GGPOSession** session, GGPOSessionCallbacks* cb, byte[] game, int num_players, int input_size, int localport);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_add_player(GGPOSession* session, GGPOPlayer* player, /*GGPOPlayerHandle*/int* handle);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_start_synctest(GGPOSession** session, GGPOSessionCallbacks* cb, byte[] game, int num_players, int input_size, int frames);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_close_session(GGPOSession* session);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_set_frame_delay(GGPOSession* session, /*GGPOPlayerHandle*/int player, int frame_delay);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_idle(GGPOSession* session, int timeout);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_add_local_input(GGPOSession* session, /*GGPOPlayerHandle*/int player, void* values, int size);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_synchronize_input(GGPOSession* session, void* values, int size, int* disconnect_flags);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_disconnect_player(GGPOSession* session, /*GGPOPlayerHandle*/int player);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_advance_frame(GGPOSession* session);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_get_network_stats(GGPOSession* session, /*GGPOPlayerHandle*/int player, GGPONetworkStats* sessiontats);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_set_disconnect_timeout(GGPOSession* session, int timeout);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe GGPOErrorCode ggpo_set_disconnect_notify_start(GGPOSession* session, int timeout);
-
-        // [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        // public static extern unsafe void ggpo_log(GGPOSession* session, byte[] fmt, ...);
-
-        [DllImport("ggponet", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe void ggpo_logv(GGPOSession* session, byte[] fmt, params object[] objects);
     }
 }
