@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 public static class CSGGPO
 {
+    const string dllName = "CSGGPO";
     public enum GGPOErrorCode
     {
         GGPO_OK = 0,
@@ -84,75 +85,57 @@ public static class CSGGPO
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-    public struct GGPOSession
-    {
-        // ~GGPOSession() { }
-        public unsafe delegate GGPOErrorCode DoPoll(int timeout);
-        public unsafe delegate GGPOErrorCode AddPlayer(ref GGPOPlayer player, /*GGPOPlayerHandle*/ref int handle);
-        public unsafe delegate GGPOErrorCode AddLocalInput(/*GGPOPlayerHandle*/int player, void* values, int size);
-        public unsafe delegate GGPOErrorCode SyncInput(void* values, int size, ref int disconnect_flags);
-        public unsafe delegate GGPOErrorCode IncrementFrame();
-        public unsafe delegate GGPOErrorCode Chat(byte[] text);
-        public unsafe delegate GGPOErrorCode DisconnectPlayer(/*GGPOPlayerHandle*/int handle);
-        public unsafe delegate GGPOErrorCode GetNetworkStats(GGPONetworkStats* stats, /*GGPOPlayerHandle*/int handle);
-        public unsafe delegate GGPOErrorCode Logv(byte[] fmt, params object[] objects);
-        public unsafe delegate GGPOErrorCode SetFrameDelay(/*GGPOPlayerHandle*/int player, int delay);
-        public unsafe delegate GGPOErrorCode SetDisconnectTimeout(int timeout);
-        public unsafe delegate GGPOErrorCode SetDisconnectNotifyStart(int timeout);
-    };
-
     /*
-            * begin_game callback - This callback has been deprecated.  You must
-            * implement it, but should ignore the 'game' parameter.
-            */
+    * begin_game callback - This callback has been deprecated.  You must
+    * implement it, but should ignore the 'game' parameter.
+    */
     public delegate bool begin_game(byte[] game);
 
     /*
-        * save_game_state - The client should allocate a buffer, copy the
-        * entire contents of the current game state into it, and copy the
-        * length into the *len parameter.  Optionally, the client can compute
-        * a checksum of the data and store it in the *checksum argument.
-        */
+    * save_game_state - The client should allocate a buffer, copy the
+    * entire contents of the current game state into it, and copy the
+    * length into the *len parameter.  Optionally, the client can compute
+    * a checksum of the data and store it in the *checksum argument.
+    */
     public unsafe delegate bool save_game_state(byte** buffer, ref int len, ref int checksum, int frame);
 
     /*
-        * load_game_state - GGPO.net will call this function at the beginning
-        * of a rollback.  The buffer and len parameters contain a previously
-        * saved state returned from the save_game_state function.  The client
-        * should make the current game state match the state contained in the
-        * buffer.
-        */
+    * load_game_state - GGPO.net will call this function at the beginning
+    * of a rollback.  The buffer and len parameters contain a previously
+    * saved state returned from the save_game_state function.  The client
+    * should make the current game state match the state contained in the
+    * buffer.
+    */
     public unsafe delegate bool load_game_state(byte* buffer, int len);
 
     /*
-        * log_game_state - Used in diagnostic testing.  The client should use
-        * the ggpo_log function to write the contents of the specified save
-        * state in a human readible form.
-        */
+    * log_game_state - Used in diagnostic testing.  The client should use
+    * the ggpo_log function to write the contents of the specified save
+    * state in a human readible form.
+    */
     public delegate bool log_game_state(byte[] filename, byte[] buffer, int len);
 
     /*
-        * free_buffer - Frees a game state allocated in save_game_state.  You
-        * should deallocate the memory contained in the buffer.
-        */
+    * free_buffer - Frees a game state allocated in save_game_state.  You
+    * should deallocate the memory contained in the buffer.
+    */
     public unsafe delegate void free_buffer(void* buffer);
 
     /*
-        * advance_frame - Called during a rollback.  You should advance your game
-        * state by exactly one frame.  Before each frame, call ggpo_synchronize_input
-        * to retrieve the inputs you should use for that frame.  After each frame,
-        * you should call ggpo_advance_frame to notify GGPO.net that you're
-        * finished.
-        *
-        * The flags parameter is reserved.  It can safely be ignored at this time.
-        */
+    * advance_frame - Called during a rollback.  You should advance your game
+    * state by exactly one frame.  Before each frame, call ggpo_synchronize_input
+    * to retrieve the inputs you should use for that frame.  After each frame,
+    * you should call ggpo_advance_frame to notify GGPO.net that you're
+    * finished.
+    *
+    * The flags parameter is reserved.  It can safely be ignored at this time.
+    */
     public unsafe delegate bool advance_frame(int flags);
 
     /*
-        * on_event - Notification that something has happened.  See the GGPOEventCode
-        * structure above for more information.
-        */
+    * on_event - Notification that something has happened.  See the GGPOEventCode
+    * structure above for more information.
+    */
     public unsafe delegate bool on_event(GGPOEvent* info);
     public struct GGPONetworkStats
     {
@@ -187,6 +170,14 @@ public static class CSGGPO
         }
     }
 
-    [DllImport("CSGGPO")]
-    public static extern int Test(out IntPtr session, IntPtr beginCallback);
+    [DllImport(dllName)]
+    public static extern int StartSession(
+        out IntPtr session,
+        IntPtr beginGameCallback/* (byte[] game) : bool*/,
+        IntPtr saveGameStateCallback/* (byte** buffer, ref int len, ref int checksum, int frame) : bool*/,
+        IntPtr loadGameStateCallback/* (byte* buffer, int len) : bool*/,
+        IntPtr logGameStateCallback/* (byte[] filename, byte[] buffer, int len) : bool*/,
+        IntPtr freeBufferCallback/* (void* buffer) : void*/,
+        IntPtr advanceFrameCallback/* (int flags) : bool*/,
+        IntPtr onEventCallback/* (GGPOEvent* info) : bool*/);
 }

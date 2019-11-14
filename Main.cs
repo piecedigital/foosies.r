@@ -30,20 +30,70 @@ namespace foosies
     {
         string testText = "Hello, world!";
 
-        public delegate bool BeginDelegate(string game);
-        public bool BeginCallback(string game)
+        public delegate bool BeginGameDelegate(string game);
+        public bool BeginGameCallback(string game)
         {
             Console.WriteLine("begin");
+            return true;
+        }
+
+        public unsafe delegate bool SaveGameStateDelegate(byte** buffer, ref int len, ref int checksum, int frame);
+        public unsafe bool SaveGameStateCallback(byte** buffer, ref int len, ref int checksum, int frame)
+        {
+            return true;
+        }
+
+        public unsafe delegate bool LoadGameStateDelegate(byte* buffer, int len);
+        public unsafe bool LoadGameStateCallback(byte* buffer, int len)
+        {
+            return true;
+        }
+
+        public unsafe delegate bool LogGameStateDelegate(string filename, byte* buffer, int len);
+        public unsafe bool LogGameStateCallback(string filename, byte* buffer, int len)
+        {
+            return true;
+        }
+
+        public unsafe delegate void FreeBufferDelegate(void* buffer);
+        public unsafe void FreeBufferCallback(void* buffer)
+        {
+            return;
+        }
+
+        public delegate bool AdvanceFrameDelegate(int flags);
+        public bool AdvanceFrameCallback(int flags)
+        {
+            return true;
+        }
+
+        public unsafe delegate bool OnEventDelegate(int info);
+        public bool OnEventCallback(int info)
+        {
             return true;
         }
 
         public unsafe Game()
         {
             IntPtr sessionRef;
-            IntPtr beginCallback = Marshal.GetFunctionPointerForDelegate(new BeginDelegate(BeginCallback));
+            IntPtr beginGameCallback = Marshal.GetFunctionPointerForDelegate(new BeginGameDelegate(BeginGameCallback));
+            IntPtr saveGameStateCallback = Marshal.GetFunctionPointerForDelegate(new SaveGameStateDelegate(SaveGameStateCallback));
+            IntPtr loadGameStateCallback = Marshal.GetFunctionPointerForDelegate(new LoadGameStateDelegate(LoadGameStateCallback));
+            IntPtr logGameStateCallback = Marshal.GetFunctionPointerForDelegate(new LogGameStateDelegate(LogGameStateCallback));
+            IntPtr freeBufferCallback = Marshal.GetFunctionPointerForDelegate(new FreeBufferDelegate(FreeBufferCallback));
+            IntPtr advanceFrameCallback = Marshal.GetFunctionPointerForDelegate(new AdvanceFrameDelegate(AdvanceFrameCallback));
+            IntPtr onEventCallback = Marshal.GetFunctionPointerForDelegate(new OnEventDelegate(OnEventCallback));
 
-            CSGGPO.GGPOErrorCode testSession = (CSGGPO.GGPOErrorCode)CSGGPO.Test(out sessionRef, beginCallback);
-            
+            CSGGPO.GGPOErrorCode testSession = (CSGGPO.GGPOErrorCode)CSGGPO.StartSession(
+                out sessionRef,
+                beginGameCallback,
+                saveGameStateCallback,
+                loadGameStateCallback,
+                logGameStateCallback,
+                freeBufferCallback,
+                advanceFrameCallback,
+                onEventCallback);
+
             testText = sessionRef.ToString();
 
             rl.InitWindow(640, 480, "Hello World");
