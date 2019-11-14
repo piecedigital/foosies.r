@@ -1,15 +1,7 @@
-﻿/* Physac.cs
-*
-* Copyright 2019 Chris Dill
-*
-* Release under zLib License.
-* See LICENSE for details.
-*/
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
-namespace GGPOData
+public static class CSGGPO
 {
     public enum GGPOErrorCode
     {
@@ -110,63 +102,58 @@ namespace GGPOData
         public unsafe delegate GGPOErrorCode SetDisconnectNotifyStart(int timeout);
     };
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-    public struct GGPOSessionCallbacks
-    {
-        /*
+    /*
             * begin_game callback - This callback has been deprecated.  You must
             * implement it, but should ignore the 'game' parameter.
             */
-        public unsafe bool begin_game(byte[] game) { return true; }
+    public delegate bool begin_game(byte[] game);
 
-        /*
-            * save_game_state - The client should allocate a buffer, copy the
-            * entire contents of the current game state into it, and copy the
-            * length into the *len parameter.  Optionally, the client can compute
-            * a checksum of the data and store it in the *checksum argument.
-            */
-        public unsafe bool save_game_state(byte** buffer, ref int len, ref int checksum, int frame) { return true; }
+    /*
+        * save_game_state - The client should allocate a buffer, copy the
+        * entire contents of the current game state into it, and copy the
+        * length into the *len parameter.  Optionally, the client can compute
+        * a checksum of the data and store it in the *checksum argument.
+        */
+    public unsafe delegate bool save_game_state(byte** buffer, ref int len, ref int checksum, int frame);
 
-        /*
-            * load_game_state - GGPO.net will call this function at the beginning
-            * of a rollback.  The buffer and len parameters contain a previously
-            * saved state returned from the save_game_state function.  The client
-            * should make the current game state match the state contained in the
-            * buffer.
-            */
-        public unsafe bool load_game_state(byte* buffer, int len) { return true; }
+    /*
+        * load_game_state - GGPO.net will call this function at the beginning
+        * of a rollback.  The buffer and len parameters contain a previously
+        * saved state returned from the save_game_state function.  The client
+        * should make the current game state match the state contained in the
+        * buffer.
+        */
+    public unsafe delegate bool load_game_state(byte* buffer, int len);
 
-        /*
-            * log_game_state - Used in diagnostic testing.  The client should use
-            * the ggpo_log function to write the contents of the specified save
-            * state in a human readible form.
-            */
-        public unsafe bool log_game_state(byte[] filename, byte[] buffer, int len) { return true; }
+    /*
+        * log_game_state - Used in diagnostic testing.  The client should use
+        * the ggpo_log function to write the contents of the specified save
+        * state in a human readible form.
+        */
+    public delegate bool log_game_state(byte[] filename, byte[] buffer, int len);
 
-        /*
-            * free_buffer - Frees a game state allocated in save_game_state.  You
-            * should deallocate the memory contained in the buffer.
-            */
-        public unsafe void free_buffer(void* buffer) { return; }
+    /*
+        * free_buffer - Frees a game state allocated in save_game_state.  You
+        * should deallocate the memory contained in the buffer.
+        */
+    public unsafe delegate void free_buffer(void* buffer);
 
-        /*
-            * advance_frame - Called during a rollback.  You should advance your game
-            * state by exactly one frame.  Before each frame, call ggpo_synchronize_input
-            * to retrieve the inputs you should use for that frame.  After each frame,
-            * you should call ggpo_advance_frame to notify GGPO.net that you're
-            * finished.
-            *
-            * The flags parameter is reserved.  It can safely be ignored at this time.
-            */
-        public unsafe bool advance_frame(int flags) { return true; }
+    /*
+        * advance_frame - Called during a rollback.  You should advance your game
+        * state by exactly one frame.  Before each frame, call ggpo_synchronize_input
+        * to retrieve the inputs you should use for that frame.  After each frame,
+        * you should call ggpo_advance_frame to notify GGPO.net that you're
+        * finished.
+        *
+        * The flags parameter is reserved.  It can safely be ignored at this time.
+        */
+    public unsafe delegate bool advance_frame(int flags);
 
-        /*
-            * on_event - Notification that something has happened.  See the GGPOEventCode
-            * structure above for more information.
-            */
-        public unsafe bool on_event(GGPOEvent* info) { return true; }
-    }
-
+    /*
+        * on_event - Notification that something has happened.  See the GGPOEventCode
+        * structure above for more information.
+        */
+    public unsafe delegate bool on_event(GGPOEvent* info);
     public struct GGPONetworkStats
     {
         public struct network
@@ -199,4 +186,7 @@ namespace GGPOData
             }
         }
     }
+
+    [DllImport("CSGGPO")]
+    public static extern int Test(out IntPtr session, IntPtr beginCallback);
 }

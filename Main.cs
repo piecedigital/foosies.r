@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Raylib;
 using rl = Raylib.Raylib;
-using GGPOData;
-using CSGGPO;
+
 
 // callbacks to delegate
 // begin_game
@@ -29,16 +29,24 @@ namespace foosies
     class Game
     {
         string testText = "Hello, world!";
-        GGPO csg = new GGPO();
+
+        public delegate bool BeginDelegate(string game);
+        public bool BeginCallback(string game)
+        {
+            Console.WriteLine("begin");
+            return true;
+        }
 
         public unsafe Game()
         {
-            int sessionRef;
-            GGPOErrorCode testSession = (GGPOErrorCode)csg.Test(&sessionRef);
-             testText = sessionRef.ToString();
+            IntPtr sessionRef;
+            IntPtr beginCallback = Marshal.GetFunctionPointerForDelegate(new BeginDelegate(BeginCallback));
+
+            CSGGPO.GGPOErrorCode testSession = (CSGGPO.GGPOErrorCode)CSGGPO.Test(out sessionRef, beginCallback);
+            
+            testText = sessionRef.ToString();
 
             rl.InitWindow(640, 480, "Hello World");
-
 
             while (!rl.WindowShouldClose())
             {
