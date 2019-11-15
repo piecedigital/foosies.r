@@ -56,20 +56,22 @@
     <Compile Include="bindings\Raygui.cs" />
     <Compile Include="bindings\Raylib.cs" />
     <Compile Include="bindings\Raymath.cs" />
-    <Compile Include="bindings\GGPOData.cs" />
+    <Compile Include="bindings\CSGGPO.cs" />
     <Compile Include="Main.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CSGGPO.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="ggponet.dll" />
+    <Content Include="ggponet.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="raylib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="CSGGPO, Version=1.0.7255.40896, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="CSGGPO, Version=1.0.7256.38850, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\CSGGPO.dll</HintPath>
     </Reference>

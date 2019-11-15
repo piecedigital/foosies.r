@@ -89,7 +89,7 @@ public static class CSGGPO
     * begin_game callback - This callback has been deprecated.  You must
     * implement it, but should ignore the 'game' parameter.
     */
-    public delegate bool begin_game(byte[] game);
+    public delegate bool BeginGameDelegate(byte[] game);
 
     /*
     * save_game_state - The client should allocate a buffer, copy the
@@ -97,7 +97,7 @@ public static class CSGGPO
     * length into the *len parameter.  Optionally, the client can compute
     * a checksum of the data and store it in the *checksum argument.
     */
-    public unsafe delegate bool save_game_state(byte** buffer, ref int len, ref int checksum, int frame);
+    public unsafe delegate bool SaveGameStateDelegate(byte** buffer, ref int len, ref int checksum, int frame);
 
     /*
     * load_game_state - GGPO.net will call this function at the beginning
@@ -106,20 +106,20 @@ public static class CSGGPO
     * should make the current game state match the state contained in the
     * buffer.
     */
-    public unsafe delegate bool load_game_state(byte* buffer, int len);
+    public unsafe delegate bool LoadGameStateDelegate(byte* buffer, int len);
 
     /*
     * log_game_state - Used in diagnostic testing.  The client should use
     * the ggpo_log function to write the contents of the specified save
     * state in a human readible form.
     */
-    public delegate bool log_game_state(byte[] filename, byte[] buffer, int len);
+    public delegate bool LogGameStateDelegate(byte[] filename, byte[] buffer, int len);
 
     /*
     * free_buffer - Frees a game state allocated in save_game_state.  You
     * should deallocate the memory contained in the buffer.
     */
-    public unsafe delegate void free_buffer(void* buffer);
+    public unsafe delegate void FreeBufferDelegate(void* buffer);
 
     /*
     * advance_frame - Called during a rollback.  You should advance your game
@@ -130,13 +130,25 @@ public static class CSGGPO
     *
     * The flags parameter is reserved.  It can safely be ignored at this time.
     */
-    public unsafe delegate bool advance_frame(int flags);
+    public unsafe delegate bool AdvanceFrameDelegate(int flags);
 
     /*
     * on_event - Notification that something has happened.  See the GGPOEventCode
     * structure above for more information.
     */
-    public unsafe delegate bool on_event(GGPOEvent* info);
+    public unsafe delegate bool OnEventDelegate(GGPOEvent* info);
+
+    public struct GGPOSessionCallbacks
+    {
+        public BeginGameDelegate beginGameCallback;
+        public SaveGameStateDelegate saveGameStateCallback;
+        public LoadGameStateDelegate loadGameStateCallback;
+        public LogGameStateDelegate logGameStateCallback;
+        public FreeBufferDelegate freeBufferCallback;
+        public AdvanceFrameDelegate advanceFrameCallback;
+        public OnEventDelegate onEventCallback;
+    }
+
     public struct GGPONetworkStats
     {
         public struct network
@@ -171,13 +183,28 @@ public static class CSGGPO
     }
 
     [DllImport(dllName)]
-    public static extern int StartSession(
+    private static extern int CGStartSession(
         out IntPtr session,
-        IntPtr beginGameCallback/* (byte[] game) : bool*/,
-        IntPtr saveGameStateCallback/* (byte** buffer, ref int len, ref int checksum, int frame) : bool*/,
-        IntPtr loadGameStateCallback/* (byte* buffer, int len) : bool*/,
-        IntPtr logGameStateCallback/* (byte[] filename, byte[] buffer, int len) : bool*/,
-        IntPtr freeBufferCallback/* (void* buffer) : void*/,
-        IntPtr advanceFrameCallback/* (int flags) : bool*/,
-        IntPtr onEventCallback/* (GGPOEvent* info) : bool*/);
+        IntPtr beginGameCallback,
+        IntPtr saveGameStateCallback,
+        IntPtr loadGameStateCallback,
+        IntPtr logGameStateCallback,
+        IntPtr freeBufferCallback,
+        IntPtr advanceFrameCallback,
+        IntPtr onEventCallback);
+
+    public unsafe static int StartSession(
+        out IntPtr session,
+        GGPOSessionCallbacks callbacks)
+    {
+        return CGStartSession(
+            out session,
+            Marshal.GetFunctionPointerForDelegate(callbacks.beginGameCallback),
+            Marshal.GetFunctionPointerForDelegate(callbacks.saveGameStateCallback),
+            Marshal.GetFunctionPointerForDelegate(callbacks.loadGameStateCallback),
+            Marshal.GetFunctionPointerForDelegate(callbacks.logGameStateCallback),
+            Marshal.GetFunctionPointerForDelegate(callbacks.freeBufferCallback),
+            Marshal.GetFunctionPointerForDelegate(callbacks.advanceFrameCallback),
+            Marshal.GetFunctionPointerForDelegate(callbacks.onEventCallback));
+    }
 }
